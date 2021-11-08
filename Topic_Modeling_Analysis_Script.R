@@ -10,8 +10,9 @@ library(tidytext)
 
 #load screened results of literature search
 # filename = '/Users/chenyuyan/journal_access-main/review_text.csv
-filename = '/Users/chenyuyan/journal_access-main/text.csv'
+filename = './abstract/cleaned/evidence_abstract_cleaned.csv'
 data = read.csv(filename)
+data$all_text<-data$Abstract
 # data <- read.csv("Literature_Search_Results_clean.csv")
 
 
@@ -81,6 +82,55 @@ custom_stop_words = tribble(
   "201c", "CUSTOM",
   "201d", "CUSTOM",
   "00b0", "CUSTOM",
+  #emma added
+  "species", "CUSTOM",
+  "tree", "CUSTOM",
+  "stands", "CUSTOM",
+  "management", "CUSTOM",
+  "efforts", "CUSTOM",
+  "results", "CUSTOM",
+  "invasion", "CUSTOM",
+  "due", "CUSTOM",
+  "site", "CUSTOM",
+  "rate", "CUSTOM",
+  "nonnative", "CUSTOM",
+  "significant", "CUSTOM",
+  "health", "CUSTOM",
+  "loss", "CUSTOM",
+  "increased", "CUSTOM",
+  "infested", "CUSTOM",
+  "found", "CUSTOM",
+  "understanding", "CUSTOM",
+  "including", "CUSTOM",
+  "compared", "CUSTOM",
+  "lower", "CUSTOM",
+  "rates", "CUSTOM",
+  "infestation", "CUSTOM",
+  "forest", "CUSTOM",
+  "exotic", "CUSTOM",
+  "invasive", "CUSTOM",
+  "major", "CUSTOM",
+  "control", "CUSTOM",
+  "mortality", "CUSTOM",
+  "findings", "CUSTOM",
+  "introduced", "CUSTOM",
+  "springer", "CUSTOM",
+  "conducted", "CUSTOM",
+  "alien", "CUSTOM",
+  "stand", "CUSTOM",
+  "estimate", "CUSTOM",
+  "estimated", "CUSTOM",
+  "affect", "CUSTOM",
+  "significantly", "CUSTOM", 
+  "low", "CUSTOM",
+  "methods", "CUSTOM",
+  "introduction", "CUSTOM",
+  "authors", "CUSTOM",
+  "information", "CUSTOM",
+  "impact", "CUSTOM",
+  "impacts", "CUSTOM",
+  "assessed", "CUSTOM",
+  "provide", "CUSTOM",
 )
 
 
@@ -114,23 +164,23 @@ tidy_dtm <- tidy_data %>%
 #lda tuning method
 #https://cran.r-project.org/web/packages/ldatuning/vignettes/topics.html
 # 
-# library(topicmodels)
-# library(ldatuning)
-# 
-# 
-# result <- FindTopicsNumber(
-#   tidy_dtm,
-#   topics = seq(from = 2, to = 15, by = 1),
-#   metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
-#   method = "Gibbs",
-#   control = list(seed = 42),
-#   verbose = TRUE
-# )
-# 
-# #Plot to determine appropriate range of topic numbers
-# #based on 4 metrics
-# 
-# FindTopicsNumber_plot(result)
+library(topicmodels)
+library(ldatuning)
+
+
+result <- FindTopicsNumber(
+  tidy_dtm,
+  topics = seq(from = 2, to = 15, by = 1),
+  metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
+  method = "Gibbs",
+  control = list(seed = 42),
+  verbose = TRUE
+)
+
+#Plot to determine appropriate range of topic numbers
+#based on 4 metrics
+
+FindTopicsNumber_plot(result)
 
 
 
@@ -148,7 +198,7 @@ library(tidyverse)
 #LDA
 lda_topics5 <- LDA(
   tidy_dtm,
-  k = 5,      ###determined using range of appropriate values above + qualitative assessment of topic coherence
+  k = 11,      ###determined using range of appropriate values above + qualitative assessment of topic coherence
   method = "Gibbs",
   control = list(burnin = 4000, iter = 8000, thin = 1000)
 ) %>%
@@ -169,7 +219,7 @@ plot <- ggplot(word_probs, aes(term2, beta, fill = as.factor(topic))) +
   coord_flip() +
   labs(x = "Word", y = "Distribution") 
 
-
+plot
 #order of topics not relevant, reordered for publication for ease of discussion
 #rerunning the model will result in different combinations, considered stable if
 #topics reflect the same themes regardless of seed

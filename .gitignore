@@ -112,3 +112,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.Rproj.user
+.DS_Store
+abstract/.DS_Store
