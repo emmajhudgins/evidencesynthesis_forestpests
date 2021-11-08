@@ -198,7 +198,7 @@ library(tidyverse)
 #LDA
 lda_topics5 <- LDA(
   tidy_dtm,
-  k = 11,      ###determined using range of appropriate values above + qualitative assessment of topic coherence
+  k = 10,      ###determined using range of appropriate values above + qualitative assessment of topic coherence
   method = "Gibbs",
   control = list(burnin = 4000, iter = 8000, thin = 1000)
 ) %>%
