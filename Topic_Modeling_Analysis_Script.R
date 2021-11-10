@@ -1,4 +1,4 @@
-
+mode="gr" # toggle between reviews, evidence, gr
 #############################################################################
 
       ### Data cleaning and preparation for analysis
@@ -7,13 +7,36 @@
 
 library(tidyverse)
 library(tidytext)
-
+library(topicmodels)
+library(forcats)
+library(tidytext)
+library(tidyverse)
+library(topicmodels)
+library(ldatuning)
 #load screened results of literature search
 # filename = '/Users/chenyuyan/journal_access-main/review_text.csv
-filename = './abstract/cleaned/evidence_abstract_cleaned.csv'
+if (mode=="reviews"){
+filename = './abstract/cleaned/review_abstract_cleaned.csv'
 data = read.csv(filename)
 data$all_text<-data$Abstract
-# data <- read.csv("Literature_Search_Results_clean.csv")
+ntopic=8
+}
+if (mode=="evidence"){
+  filename = './abstract/cleaned/evidence_abstract_cleaned.csv'
+  data = read.csv(filename)
+  data$all_text<-data$Abstract
+  ntopic=8
+}
+
+if (mode=="gr"){
+  filename = './text/cleaned_gr_usa.csv.csv'
+  data = read.csv(filename)
+  filename2 = './text/cleaned_gr_canada.csv.csv'
+  data2 = read.csv(filename2)
+  colnames(data2)<-colnames(data)
+  data=rbind(data, data2)
+  ntopic=9
+}
 
 
 #create and remove custom stop words that do not contribute to 
@@ -131,7 +154,194 @@ custom_stop_words = tribble(
   "impacts", "CUSTOM",
   "assessed", "CUSTOM",
   "provide", "CUSTOM",
-)
+  "total", "CUSTOM",
+  "effects", "CUSTOM",
+  "affected", "CUSTOM",
+  "causing", "CUSTOM",
+  "spp", "CUSTOM",
+  "evaluate", "CUSTOM",
+  "multiple", "CUSTOM",
+  #Emma reviews
+  "by", "CUSTOM",
+  "role", "CUSTOM",
+  "highly", "CUSTOM",
+  "causes", "CUSTOM",
+  "documented", "CUSTOM",
+  "review", "CUSTOM",
+  "approach", "CUSTOM",
+  "result", "CUSTOM",
+  "framework", "CUSTOM",
+  "continue", "CUSTOM",
+  "effective", "CUSTOM",
+  "common", "CUSTOM",
+  "suggests", "CUSTOM",
+  "conditions", "CUSTOM",
+  "caused", "CUSTOM",
+  "studies", "CUSTOM",
+  "improve", "CUSTOM",
+  "limited", "CUSTOM",
+  "factors", "CUSTOM",
+  "process", "CUSTOM",
+  "processes", "CUSTOM",
+  "managing", "CUSTOM",
+  "levels", "CUSTOM",
+  "managers", "CUSTOM",
+  "bv", "CUSTOM",
+  "determine", "CUSTOM",
+  "reviews", "CUSTOM",
+  "risk", "CUSTOM",
+  "risks", "CUSTOM",
+  "strategies", "CUSTOM",
+  "programs", "CUSTOM",
+  "reserved", "CUSTOM",
+  "successful", "CUSTOM",
+  "consequences", "CUSTOM",
+  "responses", "CUSTOM",
+  "damage", "CUSTOM",
+  "threat", "CUSTOM",
+  "address", "CUSTOM",
+  "literature", "CUSTOM",
+  "invaded", "CUSTOM",
+  "discuss", "CUSTOM",
+  "extensive", "CUSTOM", 
+  "elsevier", "CUSTOM",
+  "increasing", "CUSTOM",
+  "resulting", "CUSTOM",
+  "research", "CUSTOM",
+  "based", "CUSTOM",
+  "century", "CUSTOM",
+  "concern", "CUSTOM",
+  "applied", "CUSTOM",
+  "increase", "CUSTOM",
+  "manage", "CUSTOM",
+  "support", "CUSTOM",
+  "focused", "CUSTOM",
+  "invasions", "CUSTOM",
+  "reduce", "CUSTOM",
+  "illustrate", "CUSTOM",
+  "component", "CUSTOM",
+  "assess", "CUSTOM",
+  "infestations", "CUSTOM",
+  "threatens", "CUSTOM",
+  "losses", "CUSTOM",
+  "tactics", "CUSTOM",
+  "quality", "CUSTOM",
+  "articles", "CUSTOM",
+  "exist", "CUSTOM",
+  "focus", "CUSTOM",
+  "mitigate", "CUSTOM",
+  "type", "CUSTOM",
+  "step", "CUSTOM",
+  "ngs", "CUSTOM",
+  "provided", "CUSTOM",
+  "maintain", "CUSTOM",
+  "reducing", "CUSTOM",
+  "lack", "CUSTOM",
+  "previously", "CUSTOM",
+  "andor", "CUSTOM",
+  "created", "CUSTOM",
+  "primary", "CUSTOM",
+  "unique", "CUSTOM",
+  "considerations", "CUSTOM",
+  "eliminate", "CUSTOM",
+  "approaches", "CUSTOM",
+  "understood", "CUSTOM",
+  "scientific", "CUSTOM",
+  "developing", "CUSTOM",
+  "developed", "CUSTOM",
+  "keystone", "CUSTOM",
+  "required", "CUSTOM",
+  "include", "CUSTOM",
+  "central", "CUSTOM",
+  #emma added gr_canada
+  "00bb", "CUSTOM",
+  "red", "CUSTOM",
+  "red", "CUSTOM",
+  "1984", "CUSTOM",
+  "wa", "CUSTOM",
+  "ca", "CUSTOM",
+  "pra", "CUSTOM",
+  "bole", "CUSTOM",
+  "mm", "CUSTOM",
+  "er", "CUSTOM",
+  "ma", "CUSTOM",
+  "ha", "CUSTOM",
+  "la", "CUSTOM",
+  "mo", "CUSTOM",
+  "st", "CUSTOM",
+  "2000", "CUSTOM",
+  "fish", "CUSTOM",
+  "2004", "CUSTOM",
+  "f06f", "CUSTOM",
+  "strategy", "CUSTOM",
+  "loosestrife", "CUSTOM",
+  "inf", "CUSTOM",
+  "taylor", "CUSTOM",
+  "386", "CUSTOM",
+  "rep", "CUSTOM",
+  "journal", "CUSTOM",
+  "hall", "CUSTOM",
+  "25", "CUSTOM",
+  "system", "CUSTOM",
+  "1998", "CUSTOM",
+  "ch", "CUSTOM",
+  "1983", "CUSTOM",
+  "centre", "CUSTOM",
+  "resources", "CUSTOM",
+  "tools", "CUSTOM",
+  "aquatic", "CUSTOM",
+  "water", "CUSTOM",
+  "lakes", "CUSTOM",
+  "lake", "CUSTOM",
+  "ia", "CUSTOM",
+  "1993", "CUSTOM",
+  "attack", "CUSTOM",
+  "view", "CUSTOM",
+  "response", "CUSTOM",
+  "ballast", "CUSTOM",
+  "1985", "CUSTOM",
+  "km", "CUSTOM",
+  "harris", "CUSTOM",
+  "report", "CUSTOM",
+  "university", "CUSTOM",
+  "purple", "CUSTOM",
+  "00ad", "CUSTOM",
+  "lawrence", "CUSTOM",
+  #Emma added gr_usa
+  "20", "CUSTOM",
+  "12", "CUSTOM",
+  "32", "CUSTOM",
+  "15", "CUSTOM",
+  "60", "CUSTOM",
+  "70", "CUSTOM",
+  "ecol", "CUSTOM",
+  "seybold", "CUSTOM",
+  "2212", "CUSTOM",
+  "rs", "CUSTOM",
+  "b4", "CUSTOM",
+  "index", "CUSTOM",
+  "index", "CUSTOM",
+  "environ", "CUSTOM",
+  "14", "CUSTOM",
+  "b4", "CUSTOM",
+  "variables", "CUSTOM",
+  "50", "CUSTOM",
+  "19", "CUSTOM",
+  "40", "CUSTOM",
+  "17", "CUSTOM",
+  "22", "CUSTOM",
+  "11", "CUSTOM",
+  "80", "CUSTOM",
+  "paine", "CUSTOM",
+  "decline", "CUSTOM",
+  "product", "CUSTOM",
+  "identify", "CUSTOM",
+  "lee", "CUSTOM",
+  "pontius", "CUSTOM",
+  "gtr", "CUSTOM",
+  
+  
+  )
 
 
 #add custom stop words to common stop words available
@@ -148,6 +358,11 @@ tidy_data <- data %>%
   unnest_tokens(word, all_text) %>%
   #remove stop words
   anti_join(stop_words_2)
+tidy_data<-tidy_data[,c(1,3:4)]
+tidy_data<-tidy_data[-grep("[0-9]", tidy_data$word),]
+
+#for (i in 1:nrow(tidy_data)){
+ # tidy_data$word[i]<-gsub("(.*)s$","\\1", tidy_data$word[i]) } # remove plurals? but also removes trailing s on other words
 
 #cast to document-term matrix
 
@@ -164,8 +379,6 @@ tidy_dtm <- tidy_data %>%
 #lda tuning method
 #https://cran.r-project.org/web/packages/ldatuning/vignettes/topics.html
 # 
-library(topicmodels)
-library(ldatuning)
 
 
 result <- FindTopicsNumber(
@@ -183,33 +396,30 @@ result <- FindTopicsNumber(
 FindTopicsNumber_plot(result)
 
 
-
 #############################################################################
 
         ### Topic Model
 
 #############################################################################
 
-library(topicmodels)
-library(forcats)
-library(tidytext)
-library(tidyverse)
 
 #LDA
-lda_topics5 <- LDA(
+lda_topics <- LDA(
   tidy_dtm,
-  k = 10,      ###determined using range of appropriate values above + qualitative assessment of topic coherence
+  k = ntopic,      ###determined using range of appropriate values above + qualitative assessment of topic coherence
   method = "Gibbs",
   control = list(burnin = 4000, iter = 8000, thin = 1000)
-) %>%
+) 
+lda_topics5<-lda_topics%>%
   tidy(matrix = "beta")
 
-
+results<-topicmodels::posterior(lda_topics)
+topic_output<-results$topics
 #plot the top 20 words for each topic, found together with the highest probability
 
 word_probs <- lda_topics5 %>%
   group_by(topic) %>%
-  top_n(20, beta) %>%
+  top_n(15, beta) %>%
   ungroup() %>%
   mutate(term2 = fct_reorder(term, beta))
 
@@ -217,11 +427,31 @@ plot <- ggplot(word_probs, aes(term2, beta, fill = as.factor(topic))) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~ topic, scales = "free") +
   coord_flip() +
-  labs(x = "Word", y = "Distribution") 
-
+  labs(x = "Word", y = "Distribution")+ theme(axis.text=element_text(size=6),  axis.title=element_text(size=8,face="bold"))
+pdf(paste0('./result_abstract/',mode,'_plot_topics.pdf'))
 plot
+dev.off()
 #order of topics not relevant, reordered for publication for ease of discussion
 #rerunning the model will result in different combinations, considered stable if
 #topics reflect the same themes regardless of seed
 
 
+# visualize topics as word cloud
+par(oma=c(0,0,0,0))
+par(mar=c(2,2,2,2))
+for (i in 1:ntopic){
+topicToViz <- i # change for your own topic of interest
+
+top40terms <- sort(results$terms[topicToViz,], decreasing=TRUE)[1:20]
+words <- names(top40terms)
+# extract the probabilites of each of the 40 terms
+probabilities <- sort(results$terms[topicToViz,], decreasing=TRUE)[1:20]
+# visualize the terms as wordcloud
+library(RColorBrewer)
+library(wordcloud)
+mycolors <- brewer.pal(8, "Dark2")
+
+pdf(paste0('./result_abstract/',mode,'_fig_',i,'.pdf'))
+wordcloud(words, probabilities, random.order = FALSE, color = mycolors)
+dev.off()
+}
