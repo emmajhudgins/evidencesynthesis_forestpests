@@ -1,4 +1,4 @@
-mode="gr" # toggle between reviews, evidence, gr
+mode="reviews" # toggle between reviews, evidence, gr
 #############################################################################
 
       ### Data cleaning and preparation for analysis
@@ -13,6 +13,7 @@ library(tidytext)
 library(tidyverse)
 library(topicmodels)
 library(ldatuning)
+library(reshape2)
 #load screened results of literature search
 # filename = '/Users/chenyuyan/journal_access-main/review_text.csv
 if (mode=="reviews"){
@@ -29,9 +30,9 @@ if (mode=="evidence"){
 }
 
 if (mode=="gr"){
-  filename = './text/cleaned_gr_usa.csv.csv'
+  filename = './text/gr_canada_cleaned.csv'
   data = read.csv(filename)
-  filename2 = './text/cleaned_gr_canada.csv.csv'
+  filename2 = './text/gr_usa_cleaned.csv'
   data2 = read.csv(filename2)
   colnames(data2)<-colnames(data)
   data=rbind(data, data2)
@@ -358,8 +359,8 @@ tidy_data <- data %>%
   unnest_tokens(word, all_text) %>%
   #remove stop words
   anti_join(stop_words_2)
-tidy_data<-tidy_data[,c(1,3:4)]
-tidy_data<-tidy_data[-grep("[0-9]", tidy_data$word),]
+#tidy_data<-tidy_data[,c(1,3:4)]
+#tidy_data<-tidy_data[-grep("[0-9]", tidy_data$word),]
 
 #for (i in 1:nrow(tidy_data)){
  # tidy_data$word[i]<-gsub("(.*)s$","\\1", tidy_data$word[i]) } # remove plurals? but also removes trailing s on other words
@@ -381,19 +382,19 @@ tidy_dtm <- tidy_data %>%
 # 
 
 
-result <- FindTopicsNumber(
-  tidy_dtm,
-  topics = seq(from = 2, to = 15, by = 1),
-  metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
-  method = "Gibbs",
-  control = list(seed = 42),
-  verbose = TRUE
-)
+# result <- FindTopicsNumber(
+#   tidy_dtm,
+#   topics = seq(from = 2, to = 15, by = 1),
+#   metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
+#   method = "Gibbs",
+#   control = list(seed = 42),
+#   verbose = TRUE
+# )
 
 #Plot to determine appropriate range of topic numbers
 #based on 4 metrics
-
-FindTopicsNumber_plot(result)
+# 
+# FindTopicsNumber_plot(result)
 
 
 #############################################################################
@@ -429,8 +430,8 @@ plot <- ggplot(word_probs, aes(term2, beta, fill = as.factor(topic))) +
   coord_flip() +
   labs(x = "Word", y = "Distribution")+ theme(axis.text=element_text(size=6),  axis.title=element_text(size=8,face="bold"))
 pdf(paste0('./result_abstract/',mode,'_plot_topics.pdf'))
-plot
-dev.off()
+# plot
+# dev.off()
 #order of topics not relevant, reordered for publication for ease of discussion
 #rerunning the model will result in different combinations, considered stable if
 #topics reflect the same themes regardless of seed
@@ -450,8 +451,54 @@ probabilities <- sort(results$terms[topicToViz,], decreasing=TRUE)[1:20]
 library(RColorBrewer)
 library(wordcloud)
 mycolors <- brewer.pal(8, "Dark2")
-
-pdf(paste0('./result_abstract/',mode,'_fig_',i,'.pdf'))
-wordcloud(words, probabilities, random.order = FALSE, color = mycolors)
-dev.off()
+# 
+# pdf(paste0('./result_abstract/',mode,'_fig_',i,'.pdf'))
+# wordcloud(words, probabilities, random.order = FALSE, color = mycolors)
+# dev.off()
 }
+
+
+
+# topics are probability distribtions over the entire vocabulary
+beta <- results$terms   # get beta from results
+# for every document we have a probaility distribution of its contained topics
+theta <- results$topics 
+exampleIds = c(1:3)
+N <- length(exampleIds)
+topicProportionExamples <- theta[exampleIds,]
+
+k = 1
+topKtermsPerTopic <- terms(lda_topics, k)
+# topicNames <- apply(topKtermsPerTopic, 2, paste, collapse=" ")
+topicNames <-  terms(lda_topics, k)
+
+colnames(topicProportionExamples) <- topicNames
+vizDataFrame <- melt(cbind(data.frame(topicProportionExamples), document = factor(1:N)), variable.name = "topic", id.vars = "document")  
+ggplot(data = vizDataFrame, aes(topic, value, fill = document), ylab = "proportion") + 
+  geom_bar(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +  
+  # coord_flip() +
+  facet_wrap(~ document, ncol = N)
+
+# get the most frequent topic
+rankcount = integer(8)
+# get topic for each document
+document_topic = integer(dim(theta)[1])
+for(r in 1:dim(theta)[1]){
+  max_index <- 1
+  max_value <- theta[r, max_index]
+  for (c in 1:8){
+    if (theta[r, c] > max_value){
+      max_index <- c
+      max_value <- theta[r, c]
+    }
+  }
+  rankcount[max_index] = rankcount[max_index] + 1
+  document_topic[r] = max_index
+}
+
+
+df <- data.frame(topic = c(1:8), number = rankcount)
+ggplot(data=df, aes(x=topic, y=number, group=1)) +
+  geom_line()+
+  geom_point()
